@@ -31,7 +31,7 @@ class Interface:
         self.pattern_tree = pattern_tree
         self.parameter_information = parameter_information
         # set current internal command path
-        self.internal_command_path = [self.script_name]
+        self.internal_command_path = []
 
     # unpack command path into a string
     def unpack_command_path(self, given_path):
@@ -166,3 +166,42 @@ class Interface:
         caller_address = self.unpack_command_path(self.internal_command_path)
         # print message
         print(caller_address + ": " + message + "\tTry: '" + caller_address + " --help' for more info")
+
+    # scan pattern
+    def scan_pattern(self, pattern, arguments):
+        """scans the arguments to match to pattern
+        takes:
+            STR pattern - the pattern to match against
+            ITER arguments - the command line arguments after all command have been removed
+        gives:
+            ITER results - the information about the flags"""
+        pass
+
+    # parse arguments
+    def parse(self, arguments):
+        """parses command line arguments, tests them against a pattern and returns the results
+        takes:
+            ITER arguments - the argument from the command line (should be sys.argv)
+        gives:
+            DICT results - information about the command and the various flags it can take"""
+        # initialise the command branch
+        pattern_branch = self.pattern_tree
+        # get pattern to match with
+        for argument_index in range(len(arguments)):
+            # check if command is known
+            if not arguments[arguments] in pattern_branch:
+                # display error to user
+                self.display_error("Unknown command: " + arguments[argument_index])
+                exit(1)
+            # branch into command
+            pattern_branch = pattern_branch[arguments[argument_index]]
+            # add command to internal command path
+            self.internal_command_path.append(arguments[argument_index])
+            # detect pattern
+            if type(pattern_branch) == str:
+                # break out of loop
+                break
+        # assert that pattern branch is a pattern
+        assert type(pattern_branch) == str
+        # scan pattern
+        results = self.scan_pattern(pattern_branch, arguments[argument_index + 1:])
