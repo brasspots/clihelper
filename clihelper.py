@@ -7,7 +7,7 @@
 # Note: This does not replace sys for accessing command line arguments
 # It only makes syntax checking the arguments easier
 #
-# see https://github.com/brasspots/clihelper/tree/master for more latest version
+# see https://github.com/brasspots/clihelper/tree/master for the latest version
 
 # initialise version
 VERSION = "1.0"
