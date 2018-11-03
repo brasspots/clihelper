@@ -32,9 +32,10 @@ class Interface:
         self.parameter_information = parameter_information
         # initialise current internal command path
         self.internal_command_path = []
-        # initialise argument results and argument scan
-        self.argument_results = {}
+        # initialise argument results, argument scan an given arguments
+        self.argument_results = []
         self.argument_scan = []
+        self.given_arguments = []
 
     # unpack command path into a string
     def unpack_command_path(self, given_path):
@@ -173,8 +174,45 @@ class Interface:
         takes:
             STR pattern - the pattern to match against
         gives:
-            BOOL - if the arguments scan"""
-        pass
+            BOOL - the pattern is matched"""
+        # get element type and strip brackets
+        type = pattern[0]
+        pattern_parts = pattern[1:-1].split(" ")
+        # run the base case
+        if (len(pattern_parts) == 1 or (len(pattern_parts) == 2 and pattern_parts[1] == "<")) and all("|" not in part for part in pattern_parts):
+            # check if pattern part is in arguments
+            if pattern_parts[0] in self.given_arguments:
+                # set up value to append
+                if len(pattern_parts) == 2:
+                    try:
+                        value_index = self.given_arguments.index(pattern_parts[0]) + 1
+                        append_value = self.given_arguments[value_index]
+                        # remove that value from given arguments
+                        self.given_arguments = self.given_arguments[:value_index] + self.given_arguments[value_index + 1:]
+                        # detect missing argument
+                        if append_value.startswith("-"):
+                            raise IndexError()
+                    except IndexError:
+                        self.display_error("Missing argument for flag " + pattern_parts[0])
+                else:
+                    append_value = True
+                # remove flag from given arguments
+                self.given_arguments.remove(pattern_parts[0])
+                # add result to results collection
+                self.argument_results.append((pattern_parts[0], append_value))
+                return True
+            # add default values
+            else:
+                # set up append value
+                append_value = self.parameter_information[[entry[0] for entry in self.parameter_information].index(pattern_parts[0])][2]
+                if not append_value:
+                    append_value = False
+                # add result to results collection
+                self.argument_results.append(pattern_parts[0], append_value)
+                return False
+        # run the recursion
+        else:
+            pass
 
     # parse arguments
     def parse(self, arguments):
@@ -185,17 +223,23 @@ class Interface:
             DICT results - information about the command and the various flags it can take"""
         # initialise the command branch
         pattern_branch = self.pattern_tree
+        # copy arguments into local namespace
+        self.given_arguments = [argument for argument in arguments]
         # get pattern to match with
-        for argument_index in range(len(arguments)):
+        for argument_index in range(len(self.given_arguments)):
+            # check for help
+            if self.given_arguments[argument_index] == "--help":
+                self.display_help()
+                exit(0)
             # check if command is known
-            if not arguments[arguments] in pattern_branch:
+            if not self.given_arguments[argument_index] in pattern_branch:
                 # display error to user
-                self.display_error("Unknown command: " + arguments[argument_index])
+                self.display_error("Unknown command: " + self.given_arguments[argument_index])
                 exit(1)
             # branch into command
-            pattern_branch = pattern_branch[arguments[argument_index]]
+            pattern_branch = pattern_branch[self.given_arguments[argument_index]]
             # add command to internal command path
-            self.internal_command_path.append(arguments[argument_index])
+            self.internal_command_path.append(self.given_arguments[argument_index])
             # detect pattern
             if type(pattern_branch) == str:
                 # break out of loop
@@ -204,6 +248,6 @@ class Interface:
         assert type(pattern_branch) == str
         # reset results and load arguments to scan
         self.argument_results = {}
-        self.argument_scan = arguments[argument_index + 1:]
+        self.argument_scan = self.given_arguments[argument_index + 1:]
         # start pattern scanning with required pattern
         self.scan_pattern("{" + pattern_branch + "}")
