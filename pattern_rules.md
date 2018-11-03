@@ -32,3 +32,8 @@ A few example patterns are shown below:
 - '[-a|-b] \<filename>': The '-a' and '-b' flags are optional but cannot both be present. The final argument passed in will be associated with 'filename' instead of a flag
 - '-a -b -c|-d -e -f': Only '-a', '-b' and '-c' should appear or only '-d', '-e' and '-f' should appear
 - '[-a {-b -c}|-d]': If '-d' appears, then no other flag can appear. Otherwise '-a' is completely optional while '-b' and '-c' must appear together
+
+Combine this with the pattern tree then we get the full command tree that should be passed to the Interface. These look messy in code but are logical to understand. Below are a few examples to show you what they should look like:
+- {'foo.py': {'push': '[-t \<INT> -f] {-q|-v} \<filename>', 'pull': '-o <PATH> {-q|-v} <url>'}}
+- {'foo.py': '[-j -c] \<number>'}
+- {'foo.py': {'bar': '-b <PATH>', 'spam': {'egg': '{-b|-s|-f|-p} [-s|-p]', 'ham': '[-t \<FLOAT>] \<outputfile>'}}}
