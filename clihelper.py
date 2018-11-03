@@ -30,8 +30,11 @@ class Interface:
         self.long_description = long_description
         self.pattern_tree = pattern_tree
         self.parameter_information = parameter_information
-        # set current internal command path
+        # initialise current internal command path
         self.internal_command_path = []
+        # initialise argument results and argument scan
+        self.argument_results = {}
+        self.argument_scan = []
 
     # unpack command path into a string
     def unpack_command_path(self, given_path):
@@ -165,13 +168,12 @@ class Interface:
         print(caller_address + ": " + message + "\tTry: '" + caller_address + " --help' for more info")
 
     # scan pattern
-    def scan_pattern(self, pattern, arguments):
-        """scans the arguments to match to pattern
+    def scan_pattern(self, pattern):
+        """recursively scans the arguments to match to pattern and updates argument_results with the findings
         takes:
             STR pattern - the pattern to match against
-            ITER arguments - the command line arguments after all command have been removed
         gives:
-            ITER results - the information about the flags"""
+            BOOL - if the arguments scan"""
         pass
 
     # parse arguments
@@ -200,5 +202,8 @@ class Interface:
                 break
         # assert that pattern branch is a pattern
         assert type(pattern_branch) == str
-        # scan pattern
-        results = self.scan_pattern(pattern_branch, arguments[argument_index + 1:])
+        # reset results and load arguments to scan
+        self.argument_results = {}
+        self.argument_scan = arguments[argument_index + 1:]
+        # start pattern scanning with required pattern
+        self.scan_pattern("{" + pattern_branch + "}")
