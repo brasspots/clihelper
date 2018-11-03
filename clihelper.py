@@ -169,7 +169,7 @@ class Interface:
         print(caller_address + ": " + message + "\tTry: '" + caller_address + " --help' for more info")
 
     # scan pattern
-    def scan_pattern(self, pattern):
+    def scan_pattern(self, pattern, depth):
         """recursively scans the arguments to match to pattern and updates argument_results with the findings
         takes:
             STR pattern - the pattern to match against
@@ -201,6 +201,16 @@ class Interface:
                 # add result to results collection
                 self.argument_results.append((pattern_parts[0], append_value))
                 return True
+            # detect unassigned value
+            elif pattern_parts[0].startswith("<") and depth == 0:
+                try:
+                    # remove the unassigned value
+                    append_value = self.given_arguments.pop()
+                    # detect missing argument
+                    if append_value.startswith("-"):
+                        raise IndexError()
+                except IndexError:
+                    self.display_error("Missing argument " + pattern_parts[0])
             # add default values
             else:
                 # set up append value
@@ -250,4 +260,14 @@ class Interface:
         self.argument_results = {}
         self.argument_scan = self.given_arguments[argument_index + 1:]
         # start pattern scanning with required pattern
-        self.scan_pattern("{" + pattern_branch + "}")
+        self.scan_pattern("{" + pattern_branch + "}", 0)
+        # alert the user to any unknown flags
+        if self.given_arguments:
+            # detect help
+            if "--help" in self.given_arguments:
+                self.display_help()
+                exit(0)
+            else:
+                self.display_error("Unrecognised flag " + self.given_arguments[0])
+        # return the findings
+        return {pair[0]:pair[1] for pair in self.argument_results}
