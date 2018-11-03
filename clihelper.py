@@ -175,9 +175,10 @@ class Interface:
             STR pattern - the pattern to match against
         gives:
             BOOL - the pattern is matched"""
-        # get element type and strip brackets
-        type = pattern[0]
-        pattern_parts = pattern[1:-1].split(" ")
+        # get element mode and strip brackets
+        mode = pattern[0]
+        pattern = pattern[1:-1]
+        pattern_parts = pattern.split(" ")
         # run the base case
         if (len(pattern_parts) == 1 or (len(pattern_parts) == 2 and pattern_parts[1] == "<")) and all("|" not in part for part in pattern_parts):
             # check if pattern part is in arguments
@@ -218,11 +219,59 @@ class Interface:
                 if not append_value:
                     append_value = False
                 # add result to results collection
-                self.argument_results.append(pattern_parts[0], append_value)
+                self.argument_results.append((pattern_parts[0], append_value))
                 return False
         # run the recursion
         else:
-            pass
+            # get elements
+            pattern_parts = []
+            match_character = ""
+            base_pointer = 0
+            for current_pointer in range(len(pattern)):
+                # detect open bracketed element
+                if pattern[current_pointer] in ("{", "[") and not match_character:
+                    # update match character
+                    match_character = {"{": "}", "[": "]"}[pattern[current_pointer]]
+                    # cycle base pointer
+                    while pattern[base_pointer] in (" ", "}", "]"):
+                        base_pointer += 1
+                    # add current scanned element to pattern parts
+                    pattern_parts.append(pattern[base_pointer:current_pointer])
+                    # update base pointer
+                    base_pointer = current_pointer
+                # detect close bracketed element
+                elif pattern[current_pointer] == match_character:
+                    # update match character
+                    match_character = ""
+                    # add current scanned element to pattern parts
+                    pattern_parts.append(pattern[base_pointer:current_pointer + 1])
+                    # update base pointer
+                    base_pointer = current_pointer
+                # detect end of element
+                elif not match_character and pattern[current_pointer] == " ":
+                    # cycle base pointer
+                    while pattern[base_pointer] in (" ", "}", "]") and base_pointer < current_pointer:
+                        base_pointer += 1
+                    # add current scanned element to pattern parts
+                    pattern_parts.append(pattern[base_pointer:current_pointer])
+                    # update base pointer
+                    base_pointer = current_pointer
+            # last cycle of base pointer
+            while pattern[base_pointer] in (" ", "}", "]") and base_pointer < current_pointer:
+                base_pointer += 1
+            # add final scanned element to pattern parts
+            pattern_parts.append(pattern[base_pointer:current_pointer])
+            # remove all blanks
+            while "" in pattern_parts:
+                pattern_parts.remove("")
+            # reset base pointer and initialise to pipe and pipe parts
+            base_pointer = 0
+            to_pipe = ""
+            pipe_parts = []
+            # detect pipes
+            for current_pointer in range(len(pattern_parts)):
+                pass
+
 
     # parse arguments
     def parse(self, arguments):
@@ -271,3 +320,6 @@ class Interface:
                 self.display_error("Unrecognised flag " + self.given_arguments[0])
         # return the findings
         return {pair[0]:pair[1] for pair in self.argument_results}
+
+i = Interface("s", "s", "s", {"s": "-a -b {-c -d} [-x -e|-f -g]"},[])
+print(i.scan_pattern("{-a [-a -b]|{-c -d}}", 0))
