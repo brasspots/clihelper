@@ -102,11 +102,8 @@ class Interface:
             # look at each argument in the pattern
             for argument in pattern.split(" "):
                 # remove all control characters
-                argument = argument.replace("]", "")
-                argument = argument.replace("[", "")
-                argument = argument.replace("}", "")
-                argument = argument.replace("{", "")
-                argument = argument.replace("|", "")
+                for character in ["[", "]", "{", "}", "|"]:
+                    argument = argument.replace(character, "")
                 # skip input values
                 if argument.startswith("<"):
                     continue
