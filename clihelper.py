@@ -11,6 +11,8 @@
 
 # initialise version
 VERSION = "1.0"
+
+
 # interface class
 class Interface:
     # interface constructor
@@ -166,21 +168,24 @@ class Interface:
         # unpack internal command path
         caller_address = self.unpack_command_path(self.internal_command_path)
         # print message
-        print(caller_address + ": " + message + "\tTry: '" + caller_address + " --help' for more info")
+        print(caller_address + ": " + message + "\n\tTry: '" + caller_address + " --help' for more info")
 
     # scan pattern
-    def scan_pattern(self, pattern, depth):
+    def scan_pattern(self, pattern, depth, parent):
         """recursively scans the arguments to match to pattern and updates argument_results with the findings
         takes:
             STR pattern - the pattern to match against
         gives:
-            BOOL - the pattern is matched"""
+            ITER - a list of all present flags"""
         # get element mode and strip brackets
         mode = pattern[0]
         pattern = pattern[1:-1]
         pattern_parts = pattern.split(" ")
+        # sanitise mode
+        if mode not in ("{", "["):
+            raise SyntaxError("Mode for pattern " + pattern + " is not valid")
         # run the base case
-        if (len(pattern_parts) == 1 or (len(pattern_parts) == 2 and pattern_parts[1] == "<")) and all("|" not in part for part in pattern_parts):
+        if (len(pattern_parts) == 1 or (len(pattern_parts) == 2 and pattern_parts[1][0] == "<")) and all("|" not in part for part in pattern_parts):
             # check if pattern part is in arguments
             if pattern_parts[0] in self.given_arguments:
                 # set up value to append
@@ -201,9 +206,9 @@ class Interface:
                 self.given_arguments.remove(pattern_parts[0])
                 # add result to results collection
                 self.argument_results.append((pattern_parts[0], append_value))
-                return True
+                return [pattern_parts[0]]
             # detect unassigned value
-            elif pattern_parts[0].startswith("<") and depth == 1:
+            elif pattern_parts[0].startswith("<") and (depth == 1 or (depth == 0 and len(pattern_parts) == 1)):
                 try:
                     # remove the unassigned value
                     append_value = self.given_arguments.pop()
@@ -220,7 +225,7 @@ class Interface:
                     append_value = False
                 # add result to results collection
                 self.argument_results.append((pattern_parts[0], append_value))
-                return False
+                return ["-*"] if mode == "[" else []
         # run the recursion
         else:
             # get elements
@@ -294,12 +299,74 @@ class Interface:
             # remove all blanks
             while "" in pipe_parts:
                 pipe_parts.remove("")
-            # pipe the parts
+            # evaluate parts with pipes
             if len(pipe_parts) > 1:
-                pass
-            # evaluate parts regularly
+                # initialise responses
+                pipe_responses = []
+                # get responses from evaluating subpatterns
+                for subpattern in pipe_parts:
+                    # add inherited wrapping if necessary
+                    if subpattern[0] not in ("{", "["):
+                        subpattern = mode + subpattern + {"{": "}", "[": "]"}[mode]
+                    # evaluate the sub pattern
+                    pipe_responses.append(self.scan_pattern(subpattern, depth + 1, "|"))
+                # count the matches
+                match_count = [1 if response else 0 for response in pipe_responses].count(1)
+                # check there is no more than 2
+                if match_count >= 2:
+                    # alert user to invalid arguments
+                    self.display_error("Only one part of " + pattern + " can be filled")
+                    exit(1)
+                # required mode
+                if mode == "{":
+                    # check there is exclusively one match
+                    if match_count != 1:
+                        # alert user to invalid arguments
+                        self.display_error("There must be exactly one part of " + pattern + " filled")
+                        exit(1)
+                # initialise return flags
+                return_flags = []
+                # return all set flags
+                for response in pipe_responses:
+                    for flag in response:
+                        return_flags.append(flag)
+                return return_flags
+            # evaluate parts without pipes
             else:
-                pass
+                # initialise responses
+                pattern_responses = []
+                for subpattern in pattern_parts:
+                    # add inherited wrapping if necessary
+                    if subpattern[0] not in ("{", "["):
+                        subpattern = mode + subpattern + {"{": "}", "[": "]"}[mode]
+                    # evaluate the sub pattern
+                    pattern_responses.append(self.scan_pattern(subpattern, depth + 1, parent))
+                # count the matches
+                match_count = [1 if response else 0 for response in pattern_responses].count(1)
+                # required mode
+                if mode == "{":
+                    # check for some but not all matches
+                    if 0 < match_count < len(pattern_responses):
+                        print(pattern_responses)
+                        # alert user to invalid arguments
+                        self.display_error("All flags are required in " + pattern)
+                        exit(1)
+                    # check for no entries unless parent will handle invalids
+                    if match_count == 0 and not parent:
+                        # alert user to invalid arguments
+                        self.display_error("All flags are required in " + pattern)
+                        exit(1)
+                # initialise return flags
+                return_flags = []
+                # return all set flags
+                for response in pattern_responses:
+                    for flag in response:
+                        return_flags.append(flag)
+                # add value to satisfy optional mode nested in required mode
+                if mode == "[" and not return_flags:
+                    return_flags.append("-*")
+                return return_flags
+
 
     # parse arguments
     def parse(self, arguments):
@@ -331,13 +398,16 @@ class Interface:
             if type(pattern_branch) == str:
                 # break out of loop
                 break
+        # remove command path from given arguments
+        for command in self.internal_command_path:
+            self.given_arguments.remove(command)
         # assert that pattern branch is a pattern
         assert type(pattern_branch) == str
         # reset results and load arguments to scan
-        self.argument_results = {}
+        self.argument_results = []
         self.argument_scan = self.given_arguments[argument_index + 1:]
         # start pattern scanning with required pattern
-        self.scan_pattern("{" + pattern_branch + "}", 0)
+        self.scan_pattern("{" + pattern_branch + "}", 0, "")
         # alert the user to any unknown flags
         if self.given_arguments:
             # detect help
@@ -347,7 +417,4 @@ class Interface:
             else:
                 self.display_error("Unrecognised flag " + self.given_arguments[0])
         # return the findings
-        return {pair[0]:pair[1] for pair in self.argument_results}
-
-i = Interface("s", "s", "s", {"s": "-a -b {-c -d} [-x -e|-f -g]"},[])
-print(i.scan_pattern("{-a -b -c -d <INT> -e {-f | -g}}", 0))
+        return {pair[0]: pair[1] for pair in self.argument_results}
