@@ -333,21 +333,20 @@ class Interface:
                 return return_flags
             # evaluate parts without pipes
             else:
-                # initialise responses
-                pattern_responses = []
-                for subpattern in pattern_parts:
-                    # add inherited wrapping if necessary
-                    if subpattern[0] not in ("{", "["):
-                        subpattern = mode + subpattern + {"{": "}", "[": "]"}[mode]
-                    # evaluate the sub pattern
-                    pattern_responses.append(self.scan_pattern(subpattern, depth + 1, parent))
-                # count the matches
-                match_count = [1 if response else 0 for response in pattern_responses].count(1)
                 # required mode
                 if mode == "{":
+                    # initialise responses
+                    pattern_responses = []
+                    for subpattern in pattern_parts:
+                        # add inherited wrapping if necessary
+                        if subpattern[0] not in ("{", "["):
+                            subpattern = mode + subpattern + {"{": "}", "[": "]"}[mode]
+                        # evaluate the sub pattern
+                        pattern_responses.append(self.scan_pattern(subpattern, depth + 1, parent))
+                    # count the matches
+                    match_count = [1 if response else 0 for response in pattern_responses].count(1)
                     # check for some but not all matches
                     if 0 < match_count < len(pattern_responses):
-                        print(pattern_responses)
                         # alert user to invalid arguments
                         self.display_error("All flags are required in " + pattern)
                         exit(1)
@@ -356,6 +355,15 @@ class Interface:
                         # alert user to invalid arguments
                         self.display_error("All flags are required in " + pattern)
                         exit(1)
+                else:
+                    # initialise responses
+                    pattern_responses = []
+                    for subpattern in pattern_parts:
+                        # add inherited wrapping if necessary
+                        if subpattern[0] not in ("{", "["):
+                            subpattern = mode + subpattern + {"{": "}", "[": "]"}[mode]
+                        # evaluate the sub pattern
+                        pattern_responses.append(self.scan_pattern(subpattern, depth + 1, "["))
                 # initialise return flags
                 return_flags = []
                 # return all set flags
