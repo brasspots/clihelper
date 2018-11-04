@@ -203,7 +203,7 @@ class Interface:
                 self.argument_results.append((pattern_parts[0], append_value))
                 return True
             # detect unassigned value
-            elif pattern_parts[0].startswith("<") and depth == 0:
+            elif pattern_parts[0].startswith("<") and depth == 1:
                 try:
                     # remove the unassigned value
                     append_value = self.given_arguments.pop()
@@ -236,7 +236,8 @@ class Interface:
                     while pattern[base_pointer] in (" ", "}", "]"):
                         base_pointer += 1
                     # add current scanned element to pattern parts
-                    pattern_parts.append(pattern[base_pointer:current_pointer])
+                    if pattern[base_pointer:current_pointer]:
+                        pattern_parts.append(pattern[base_pointer:current_pointer])
                     # update base pointer
                     base_pointer = current_pointer
                 # detect close bracketed element
@@ -244,34 +245,61 @@ class Interface:
                     # update match character
                     match_character = ""
                     # add current scanned element to pattern parts
-                    pattern_parts.append(pattern[base_pointer:current_pointer + 1])
+                    if pattern[base_pointer:current_pointer + 1]:
+                        pattern_parts.append(pattern[base_pointer:current_pointer + 1])
                     # update base pointer
                     base_pointer = current_pointer
                 # detect end of element
-                elif not match_character and pattern[current_pointer] == " ":
+                elif not match_character and pattern[current_pointer] == " " and current_pointer != len(pattern) - 1 and pattern[current_pointer + 1] != "<":
                     # cycle base pointer
                     while pattern[base_pointer] in (" ", "}", "]") and base_pointer < current_pointer:
                         base_pointer += 1
                     # add current scanned element to pattern parts
-                    pattern_parts.append(pattern[base_pointer:current_pointer])
+                    if pattern[base_pointer:current_pointer]:
+                        pattern_parts.append(pattern[base_pointer:current_pointer])
                     # update base pointer
                     base_pointer = current_pointer
             # last cycle of base pointer
-            while pattern[base_pointer] in (" ", "}", "]") and base_pointer < current_pointer:
+            while base_pointer <= current_pointer and pattern[base_pointer] in (" ", "}", "]"):
                 base_pointer += 1
             # add final scanned element to pattern parts
-            pattern_parts.append(pattern[base_pointer:current_pointer])
-            # remove all blanks
-            while "" in pattern_parts:
-                pattern_parts.remove("")
+            if pattern[base_pointer:]:
+                pattern_parts.append(pattern[base_pointer:])
             # reset base pointer and initialise to pipe and pipe parts
             base_pointer = 0
             to_pipe = ""
             pipe_parts = []
             # detect pipes
             for current_pointer in range(len(pattern_parts)):
+                if "|" in pattern_parts[current_pointer] and pattern_parts[current_pointer][0] not in ["{", "["]:
+                    # split pattern part into pipe parts
+                    pipe_split = pattern_parts[current_pointer].split("|")
+                    # add pipe splits to pipe parts
+                    for pipe_pointer in range(len(pipe_split)):
+                        # the first split part
+                        if pipe_pointer == 0:
+                            pipe_parts.append(" ".join([to_pipe] + pattern_parts[base_pointer:current_pointer] + [pipe_split[pipe_pointer]]).strip(" "))
+                            # reset the to pipe buffer
+                            to_pipe = ""
+                            # update the base pointer
+                            base_pointer = current_pointer + 1
+                        # the last split part
+                        elif pipe_pointer == len(pipe_split) - 1:
+                            to_pipe = pipe_split[pipe_pointer]
+                        # in the middle
+                        elif pipe_split[pipe_pointer]:
+                            pipe_parts.append(pipe_split[pipe_pointer])
+            # add last pattern part to pipe parts
+            pipe_parts.append(" ".join([to_pipe] + pattern_parts[base_pointer:]).strip(" "))
+            # remove all blanks
+            while "" in pipe_parts:
+                pipe_parts.remove("")
+            # pipe the parts
+            if len(pipe_parts) > 1:
                 pass
-
+            # evaluate parts regularly
+            else:
+                pass
 
     # parse arguments
     def parse(self, arguments):
@@ -322,4 +350,4 @@ class Interface:
         return {pair[0]:pair[1] for pair in self.argument_results}
 
 i = Interface("s", "s", "s", {"s": "-a -b {-c -d} [-x -e|-f -g]"},[])
-print(i.scan_pattern("{-a [-a -b]|{-c -d}}", 0))
+print(i.scan_pattern("{-a -b -c -d <INT> -e {-f | -g}}", 0))
