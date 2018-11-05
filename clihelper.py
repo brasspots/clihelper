@@ -9,6 +9,8 @@
 #
 # see https://github.com/brasspots/clihelper/tree/master for the latest version
 
+# import stderr
+from sys import stderr as standard_error
 # initialise version
 VERSION = "1.1"
 
@@ -167,8 +169,8 @@ class Interface:
             None"""
         # unpack internal command path
         caller_address = self.unpack_command_path(self.internal_command_path)
-        # print message
-        print(caller_address + ": " + message + "\n\tTry: '" + caller_address + " --help' for more info")
+        # print message to standard error
+        print(caller_address + ": " + message + "\n\tTry: '" + caller_address + " --help' for more info", file=standard_error)
 
     # scan pattern
     def scan_pattern(self, pattern, depth, parent):
