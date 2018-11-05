@@ -10,7 +10,7 @@
 # see https://github.com/brasspots/clihelper/tree/master for the latest version
 
 # initialise version
-VERSION = "1.0"
+VERSION = "1.1"
 
 
 # interface class
