@@ -12,7 +12,7 @@
 # import stderr
 from sys import stderr as standard_error
 # initialise version
-VERSION = "1.1"
+VERSION = "1.2"
 
 
 # interface class
@@ -87,7 +87,7 @@ class Interface:
             None"""
         # acquire target patterns
         target_patterns = self.pattern_tree
-        for command in self.internal_command_path:
+        for command in (self.internal_command_path if self.internal_command_path else [self.script_name]):
             target_patterns = target_patterns[command]
         # unpack pattern sub tree
         if type(target_patterns) == dict:
@@ -95,7 +95,7 @@ class Interface:
         else:
             target_patterns = [target_patterns]
         # unpack internal command path
-        caller_address = self.unpack_command_path(self.internal_command_path)
+        caller_address = self.unpack_command_path(self.internal_command_path if self.internal_command_path else [self.script_name])
         # print usage header
         usage_message = "Usage: " + caller_address + " "
         print(usage_message + target_patterns[0])
@@ -168,7 +168,7 @@ class Interface:
         gives:
             None"""
         # unpack internal command path
-        caller_address = self.unpack_command_path(self.internal_command_path)
+        caller_address = self.unpack_command_path(self.internal_command_path if self.internal_command_path else [self.script_name])
         # print message to standard error
         print(caller_address + ": " + message + "\n\tTry: '" + caller_address + " --help' for more info", file=standard_error)
 
