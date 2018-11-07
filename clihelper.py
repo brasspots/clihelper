@@ -11,8 +11,10 @@
 
 # import stderr
 from sys import stderr as standard_error
+# import os.path
+from os import path as path_check
 # initialise version
-VERSION = "1.2"
+VERSION = "1.3"
 
 
 # interface class
@@ -428,3 +430,43 @@ class Interface:
                 self.display_error("Unrecognised flag " + self.given_arguments[0])
         # return the findings
         return {pair[0]: pair[1] for pair in self.argument_results}
+
+    # open file
+    def open_file(self, path, mode):
+        """wrapper for open() but checks for permissions, existing files and handles errors
+        takes:
+            STR path - the path to the file
+            STR mode - the file will be opened in this mode
+        gives:
+            _io.TxtIOWrapper - the file object, the same thing returned from open()"""
+        # potential file overwrite
+        if path_check.isfile(path) and "w" in mode:
+            # unpack internal command path
+            caller_address = self.unpack_command_path(self.internal_command_path if self.internal_command_path else [self.script_name])
+            # acquire overwrite confirmation
+            user_confirmation = (caller_address + ": File " + path + " already exists, overwrite? [y/n]: ").upper()
+            while user_confirmation not in ("Y", "N"):
+                print(caller_address + ": Please enter 'Y' or 'N'")
+                user_confirmation = (caller_address + ": File " + path + " already exists, overwrite? [y/n]: ").upper()
+            # check for overwrite denial
+            if user_confirmation == "N":
+                exit(0)
+        # attempt to open the file
+        try:
+            file = open(path, mode)
+        # permission denied
+        except PermissionError:
+            self.display_error("Permission denied when accessing file " + path)
+            exit(1)
+        # file not found
+        except FileNotFoundError:
+            self.display_error("Could not locate file " + path)
+            exit(1)
+        # file exists
+        except FileExistsError:
+            self.display_error("File " + path + " already exists")
+            exit(1)
+        # catch all
+        except:
+            self.display_error("Could not access file " + path)
+            exit(1)
