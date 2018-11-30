@@ -1,4 +1,4 @@
-# python3 processor for Linux command line programs
+# python3 module for Linux command line programs
 # this module provides most the boilerplate code for command line python scripts including:
 #   - help message
 #   - bad usage messages
@@ -14,6 +14,8 @@
 from sys import stderr as standard_error
 # import os.path
 from os import path as path_check
+# import type checks
+import type_check
 # initialise version
 VERSION = "1.4"
 
@@ -43,8 +45,6 @@ class Interface:
         self.argument_results = []
         self.argument_scan = []
         self.given_arguments = []
-        # initialise type checking dictionary
-        self.type_check_dict = {"<INT>":self.check_int}
 
     # unpack command path into a string
     def unpack_command_path(self, given_path):
@@ -207,10 +207,12 @@ class Interface:
                             raise IndexError()
                     except IndexError:
                         self.display_error("Missing argument for flag " + pattern_parts[0])
+                        exit(1)
                     # detect correct typing
-                    if self.assert_typing and pattern_parts[1] in self.type_check_dict and not self.type_check_dict[pattern_parts[1]](append_value):
+                    if self.assert_typing and pattern_parts[1] in type_check.type_dict and not type_check.type_dict[pattern_parts[1]](append_value):
                         # alert the user to bad type
                         self.display_error("Incorrect type for " + pattern_parts[0])
+                        exit(1)
                 else:
                     append_value = True
                 # remove flag from given arguments
@@ -481,13 +483,3 @@ class Interface:
             exit(1)
         # return IO object
         return file
-
-    # check int
-    def check_int(self, value):
-        """asserts a given value is a valid integer
-        takes:
-            STR value - the value to check
-        gives:
-            BOOL - true if the value is a valid integer, otherwise false"""
-        return all(character.isdigit() for character in value)
-
