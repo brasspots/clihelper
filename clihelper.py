@@ -3,6 +3,7 @@
 #   - help message
 #   - bad usage messages
 #   - automatic flag handling
+#   - automatic file handling
 #
 # Note: This does not replace sys for accessing command line arguments
 # It only makes syntax checking the arguments easier
@@ -14,7 +15,7 @@ from sys import stderr as standard_error
 # import os.path
 from os import path as path_check
 # initialise version
-VERSION = "1.3"
+VERSION = "1.4"
 
 
 # interface class
@@ -42,6 +43,8 @@ class Interface:
         self.argument_results = []
         self.argument_scan = []
         self.given_arguments = []
+        # initialise type checking dictionary
+        self.type_check_dict = {"<INT>":self.check_int}
 
     # unpack command path into a string
     def unpack_command_path(self, given_path):
@@ -204,6 +207,10 @@ class Interface:
                             raise IndexError()
                     except IndexError:
                         self.display_error("Missing argument for flag " + pattern_parts[0])
+                    # detect correct typing
+                    if self.assert_typing and pattern_parts[1] in self.type_check_dict and not self.type_check_dict[pattern_parts[1]](append_value):
+                        # alert the user to bad type
+                        self.display_error("Incorrect type for " + pattern_parts[0])
                 else:
                     append_value = True
                 # remove flag from given arguments
@@ -381,7 +388,7 @@ class Interface:
 
 
     # parse arguments
-    def parse(self, arguments):
+    def parse(self, arguments, assert_typing=True):
         """parses command line arguments, tests them against a pattern and returns the results
         takes:
             ITER arguments - the argument from the command line (should be sys.argv)
@@ -389,6 +396,8 @@ class Interface:
             DICT results - information about the command and the various flags it can take"""
         # initialise the command branch
         pattern_branch = self.pattern_tree
+        # copy assert typing into local namespace
+        self.assert_typing = assert_typing
         # copy arguments into local namespace
         self.given_arguments = [argument for argument in arguments]
         # get pattern to match with
@@ -470,3 +479,15 @@ class Interface:
         except:
             self.display_error("Could not access file " + path)
             exit(1)
+        # return IO object
+        return file
+
+    # check int
+    def check_int(self, value):
+        """asserts a given value is a valid integer
+        takes:
+            STR value - the value to check
+        gives:
+            BOOL - true if the value is a valid integer, otherwise false"""
+        return all(character.isdigit() for character in value)
+
