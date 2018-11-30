@@ -4,8 +4,10 @@ this module provides most the boilerplate code for command line python scripts i
   - help message
   - bad usage messages
   - automatic flag handling
+  - file IO error handling
+  - argument type checking
 
 Note: This does not replace sys for accessing command line arguments
 It only makes syntax checking the arguments easier
 
-version: 1.3
+version: 1.4

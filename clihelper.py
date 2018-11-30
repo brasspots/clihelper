@@ -316,7 +316,7 @@ class Interface:
             if len(pipe_parts) > 1:
                 # initialise responses
                 pipe_responses = []
-                # get responses from evaluating subpatterns
+                # get responses from evaluating sub-patterns
                 for subpattern in pipe_parts:
                     # add inherited wrapping if necessary
                     if subpattern[0] not in ("{", "["):
