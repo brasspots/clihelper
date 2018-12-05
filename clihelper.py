@@ -30,9 +30,10 @@ class Interface:
             STR script_description - a brief description of the program to be shown at the top of the help message
             STR long_description - a more in-depth description to be shown at the bottom of the help message
             DICT pattern_tree - a dictionary of patterns to use keyed using sub commands
-            ITER parameter_information - list of information about parameters in the format [flag, description, default_value]
+            ITER parameter_information - list of information about parameters in the format [flag, long name, description, default_value]
         gives:
-            None"""
+            None
+        note: each entry in parameter_information must have a long name, but the flag is optional"""
         # copy variables into local namespace
         self.script_name = script_name
         self.script_description = script_description
@@ -126,7 +127,7 @@ class Interface:
         # print out argument information
         if present_arguments:
             # initialise columns
-            columns = [[], [], [], []]
+            columns = [[], [], [], [], []]
             for information in self.parameter_information:
                 if information[0] in present_arguments:
                     # add values to columns
@@ -139,7 +140,7 @@ class Interface:
                 # if the column is used
                 if any(columns[column_index]):
                     # add the header
-                    columns[column_index] = [{0:"ARGUMENT", 1:"VALUE", 2:"DESCRIPTION", 3:"DEFAULT VALUE"}[column_index]] + columns[column_index]
+                    columns[column_index] = [{0:"FLAG", 1:"LONG NAME", 2:"VALUE", 3:"DESCRIPTION", 4:"DEFAULT VALUE"}[column_index]] + columns[column_index]
                     # add to max widths
                     max_widths.append(max([len(value) for value in columns[column_index]]))
                 # set the column to unused
@@ -483,3 +484,8 @@ class Interface:
             exit(1)
         # return IO object
         return file
+
+
+i = Interface("foo", "bar", "foobar", {"foo": "[-a -b <INT>]"}, [["-a", "--eggs", "", "Want eggs?", ""], ["-b", "--bacon", "<INT>", "mmmm...", "20"]])
+
+i.display_help()
