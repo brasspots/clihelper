@@ -40,6 +40,12 @@ class Interface:
         self.long_description = long_description
         self.pattern_tree = pattern_tree
         self.parameter_information = parameter_information
+        # construct flag to long name map
+        self.flag_map = {}
+        for parameter in self.parameter_information:
+            # check for flag
+            if parameter[0] != "":
+                self.flag_map[parameter[0]] = parameter[1]
         # initialise current internal command path
         self.internal_command_path = []
         # initialise argument results, argument scan an given arguments
@@ -140,7 +146,7 @@ class Interface:
                 # if the column is used
                 if any(columns[column_index]):
                     # add the header
-                    columns[column_index] = [{0:"FLAG", 1:"LONG NAME", 2:"VALUE", 3:"DESCRIPTION", 4:"DEFAULT VALUE"}[column_index]] + columns[column_index]
+                    columns[column_index] = [("FLAG", "LONG NAME", "VALUE", "DESCRIPTION", "DEFAULT VALUE")[column_index]] + columns[column_index]
                     # add to max widths
                     max_widths.append(max([len(value) for value in columns[column_index]]))
                 # set the column to unused
@@ -484,8 +490,3 @@ class Interface:
             exit(1)
         # return IO object
         return file
-
-
-i = Interface("foo", "bar", "foobar", {"foo": "[-a -b <INT>]"}, [["-a", "--eggs", "", "Want eggs?", ""], ["-b", "--bacon", "<INT>", "mmmm...", "20"]])
-
-i.display_help()
