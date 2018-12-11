@@ -5,7 +5,7 @@
 # this is the value that will be checked
 # it should return 1 boolean, True matches the type criteria, False if otherwise
 # then add your new type check to the type dictionary at the bottom of the file
-# teh key must be the angle brace wrapped identifier and the value must be the name of your function
+# the key must be the angle brace wrapped identifier and the value must be the name of your function
 #
 # Note: the type checking supported in clihelper does not cast the given value to the type
 # you will still receive a string for the value of arguments
@@ -13,7 +13,7 @@
 # see https://github.com/brasspots/clihelper/tree/master for the latest version
 
 # initialise version
-VERSION = "1.0"
+VERSION = "1.1"
 
 
 # check int
