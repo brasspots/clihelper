@@ -15,9 +15,12 @@ from sys import stderr as standard_error
 # import os.path
 from os import path as path_check
 # import type checks
-import type_check
+from cores import type_check_core
+# import scanner
+from cores import scanner_core
+
 # initialise version
-VERSION = "1.4"
+VERSION = "2.0"
 
 
 # interface class
@@ -33,7 +36,8 @@ class Interface:
             ITER parameter_information - list of information about parameters in the format [flag, long name, description, default_value]
         gives:
             None
-        note: each entry in parameter_information must have a long name, but the flag is optional"""
+        note: each entry in parameter_information must have a long name, a description is recommended and a flag and a default value are completely optional
+        any blank entry should be represented as an empty string"""
         # copy variables into local namespace
         self.script_name = script_name
         self.script_description = script_description
@@ -185,10 +189,12 @@ class Interface:
         print(caller_address + ": " + message + "\n\tTry: '" + caller_address + " --help' for more info", file=standard_error)
 
     # scan pattern
-    def scan_pattern(self, pattern, depth, parent):
+    def scan_pattern(self, pattern, depth=0, parent=""):
         """recursively scans the arguments to match to pattern and updates argument_results with the findings
         takes:
             STR pattern - the pattern to match against
+            INT depth - used to track recursion depth
+            STR parent - used to track if a flag is explicitly required
         gives:
             ITER - a list of all present flags"""
         # get element mode and strip brackets
@@ -216,7 +222,7 @@ class Interface:
                         self.display_error("Missing argument for flag " + pattern_parts[0])
                         exit(1)
                     # detect correct typing
-                    if self.assert_typing and pattern_parts[1] in type_check.type_dict and not type_check.type_dict[pattern_parts[1]](append_value):
+                    if self.assert_typing and pattern_parts[1] in type_check_core.type_dict and not type_check_core.type_dict[pattern_parts[1]](append_value):
                         # alert the user to bad type
                         self.display_error("Incorrect type for " + pattern_parts[0])
                         exit(1)
@@ -329,7 +335,7 @@ class Interface:
                     if subpattern[0] not in ("{", "["):
                         subpattern = mode + subpattern + {"{": "}", "[": "]"}[mode]
                     # evaluate the sub pattern
-                    pipe_responses.append(self.scan_pattern(subpattern, depth + 1, "|"))
+                    pipe_responses.append(self.scan_pattern(subpattern, depth=depth + 1, parent="|"))
                 # count the matches
                 match_count = [1 if response else 0 for response in pipe_responses].count(1)
                 # check there is no more than 2
@@ -362,7 +368,7 @@ class Interface:
                         if subpattern[0] not in ("{", "["):
                             subpattern = mode + subpattern + {"{": "}", "[": "]"}[mode]
                         # evaluate the sub pattern
-                        pattern_responses.append(self.scan_pattern(subpattern, depth + 1, parent))
+                        pattern_responses.append(self.scan_pattern(subpattern, depth=depth + 1, parent=parent))
                     # count the matches
                     match_count = [1 if response else 0 for response in pattern_responses].count(1)
                     # check for some but not all matches
@@ -383,7 +389,7 @@ class Interface:
                         if subpattern[0] not in ("{", "["):
                             subpattern = mode + subpattern + {"{": "}", "[": "]"}[mode]
                         # evaluate the sub pattern
-                        pattern_responses.append(self.scan_pattern(subpattern, depth + 1, "["))
+                        pattern_responses.append(self.scan_pattern(subpattern, depth=depth + 1, parent="["))
                 # initialise return flags
                 return_flags = []
                 # return all set flags
@@ -437,7 +443,7 @@ class Interface:
         self.argument_results = []
         self.argument_scan = self.given_arguments[argument_index + 1:]
         # start pattern scanning with required pattern
-        self.scan_pattern("{" + pattern_branch + "}", 0, "")
+        self.scan_pattern("{" + pattern_branch + "}")
         # alert the user to any unknown flags
         if self.given_arguments:
             # detect help
