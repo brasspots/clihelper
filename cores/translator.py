@@ -125,3 +125,31 @@ def display_translate(string, parameters):
 
     # return translated string
     return translated
+
+
+# translate tree into list of commands
+def tree_translate(tree, parameters):
+    """translates a tree dict with pattern leaves into a list of printable commands
+    takes:
+        DICT tree - the tree to pull commands from
+        LIST parameters - the list of parameters to use when getting a displayable pattern
+    gives:
+        LIST - a list of possible commands"""
+
+    # recursive base case if a pattern string is found
+    if type(tree) == str:
+        # return the printable pattern string
+        return display_translate(tree, parameters)
+
+    else:
+
+        # initialise command list
+        command_list = []
+
+        # iterate over keys in tree
+        for key in tree:
+            # add new patterns to command list
+            command_list += [key + " " + pattern for pattern in tree_translate(tree[key])]
+
+        # return possible commands
+        return command_list
