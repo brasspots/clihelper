@@ -205,6 +205,26 @@ class Interface:
         gives:
             None"""
 
+        # print the header and initialise valid patterns
+        print("Usage: ", end="")
+        valid_patterns = []
+
+        # get each possible pattern
+        for pattern in translator.tree_translate(self.pattern_tree, self.parameters):
+            # check the pattern starts with the current working path
+            if pattern.startswith(self.current_working_path):
+                # add to valid patterns
+                valid_patterns.append(pattern)
+
+        # print each possible pattern
+        for pattern in valid_patterns:
+            print(pattern, end="\n" + " " * 7)
+
+        # add newline
+        print()
+
+        # print each parameter in possible patterns
+
         # exit with successful completion
         exit(0)
 

@@ -71,14 +71,16 @@ def check_bin(value):
 def check_bool(value):
     """asserts a given value is valid boolean
         takes:
-            STR value - the value to check
+            BOOL value - the value to check
         gives:
             BOOL - true is the value is valid boolean, otherwise false"""
     return value in (True, False)
+
 
 # initialise type dictionary
 type_dict = {"<INT>": check_int,
              "<FLOAT>": check_float,
              "<HEX>": check_hex,
              "<OCT>": check_oct,
-             "<BIN>": check_bin}
+             "<BIN>": check_bin,
+             "<BOOL>": check_bool}

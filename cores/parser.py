@@ -14,7 +14,7 @@ VERSION = "1.0"
 def scan_pattern(pattern, input_list):
     """ function to match an input to a pattern
     takes:
-        STR pattern - the pattern to match against in a clihelper pattern format (see pattern_rules.md)
+        STR pattern - the pattern to match against in a clihelper pattern format (see DOCUMENTATION.md)
         LIST input_list - list of arguments to try and match
     gives:
         DICT matches - keys are the long name and values are True if the key is a flag or the given value if it is an argument
