@@ -1,4 +1,13 @@
-# Pattern Rules and Workings
+# DOCUMENTATION
+Below is the documentation for various parts of the clihelper module. Hopefully it will allow you to make some sense of the horrible mess of code that I've written! 
+
+## What Does it Do?
+Lorem ipsum
+
+## How to Use it
+Lorem ipsum
+
+## Pattern Rules and Workings
 The clihelper interface uses a pattern to determine if a given set of arguments is valid. It determines which pattern to use by navigating through a command tree. At each node, clihelper will look at the argument that was passed in through the command line and branch to it. If it arrives and an end node then that is the pattern it will scan against.
 
 There are a few rules to follow when creating a command tree:
@@ -37,3 +46,6 @@ Combine this with the pattern tree then we get the full command tree that should
 - {'foo.py': {'push': '[-t \<INT> -f] {-q|-v} \<filename>', 'pull': '-o <PATH> {-q|-v} <url>'}}
 - {'foo.py': '[-j -c] \<number>'}
 - {'foo.py': {'bar': '-b <PATH>', 'spam': {'egg': '{-b|-s|-f|-p} [-s|-p]', 'ham': '[-t \<FLOAT>] \<outputfile>'}}}
+
+## Defining Custom Types
+Lorem ipsum
