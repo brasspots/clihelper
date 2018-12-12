@@ -3,7 +3,7 @@
 #
 # to create a custom type write a function that takes 1 value
 # this is the value that will be checked
-# it should return 1 boolean, True matches the type criteria, False if otherwise
+# it should return a boolean, True matches the type criteria, False if otherwise
 # then add your new type check to the type dictionary at the bottom of the file
 # the key must be the angle brace wrapped identifier and the value must be the name of your function
 #
@@ -16,9 +16,9 @@
 VERSION = "1.1"
 
 
-# check int
+# check integer
 def check_int(value):
-    """ asserts a given value is a valid integer
+    """asserts a given value is a valid integer
     takes:
         STR value - the value to check
     gives:
@@ -28,7 +28,7 @@ def check_int(value):
 
 # check float
 def check_float(value):
-    """ asserts a given value is a valid float
+    """asserts a given value is a valid float
     takes:
         STR value - the value to check
     gives:
@@ -37,9 +37,9 @@ def check_float(value):
     return all(character.isdigit() or character == "." for character in value) and "." in value
 
 
-# check hex
+# check hexadecimal
 def check_hex(value):
-    """ asserts a given value is valid hexadecimal
+    """asserts a given value is valid hexadecimal
     takes:
         STR value - the value to check
     gives:
@@ -47,9 +47,9 @@ def check_hex(value):
     return all(character.upper() in tuple(chr(dec) for dec in range(48, 58)) + tuple(chr(dec) for dec in range(65, 71)) for character in value)
 
 
-# check oct
+# check octal
 def check_oct(value):
-    """ asserts a given value is valid octal
+    """asserts a given value is valid octal
     takes:
         STR value - the value to check
     gives:
@@ -57,14 +57,24 @@ def check_oct(value):
     return all(character in (chr(dec) for dec in range(48, 56)) for character in value)
 
 
-# check bin
+# check binary
 def check_bin(value):
-    """ asserts a given value is valid binary
+    """asserts a given value is valid binary
     takes:
         STR value - the value to check
     gives:
         BOOL - true is the value is valid binary, otherwise false"""
     return all(character in ("0", "1") for character in value)
+
+
+# check boolean
+def check_bool(value):
+    """asserts a given value is valid boolean
+        takes:
+            STR value - the value to check
+        gives:
+            BOOL - true is the value is valid boolean, otherwise false"""
+    return value in (True, False)
 
 # initialise type dictionary
 type_dict = {"<INT>": check_int,
